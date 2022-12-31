@@ -27,7 +27,7 @@ import { UserWhereUniqueInput } from "./UserWhereUniqueInput";
 import { UserFindManyArgs } from "./UserFindManyArgs";
 import { UserUpdateInput } from "./UserUpdateInput";
 import { User } from "./User";
-@swagger.ApiBasicAuth()
+@swagger.ApiBearerAuth()
 @common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class UserControllerBase {
   constructor(
