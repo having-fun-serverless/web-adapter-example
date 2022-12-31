@@ -29,7 +29,7 @@ import { GraphQLModule } from "@nestjs/graphql";
         const playground = configService.get("GRAPHQL_PLAYGROUND");
         const introspection = configService.get("GRAPHQL_INTROSPECTION");
         return {
-          autoSchemaFile: "schema.graphql",
+          autoSchemaFile: true,
           sortSchema: true,
           playground,
           introspection: playground || introspection,

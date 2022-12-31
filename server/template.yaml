@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 150
+
+Resources:
+    Amplication:
+        Type: AWS::Serverless::Function
+        Properties:
+            PackageType: Image
+            MemorySize: 1024
+            Environment:
+                Variables:
+                    BCRYPT_SALT: 10
+                    JWT_SECRET_KEY: Change_ME
+                    JWT_EXPIRATION: 2d
+                    PORT: 8080
+            FunctionUrlConfig:
+                AuthType: NONE
+        Metadata:
+            DockerTag: v1
+            DockerContext: ./
+            Dockerfile: Dockerfile
+    
+Outputs:
+    AmplicationFunctionUrlEndpoint:
+      Description: "Amplication Function URL Endpoint"
+      Value:
+        Fn::GetAtt: AmplicationUrl.FunctionUrl

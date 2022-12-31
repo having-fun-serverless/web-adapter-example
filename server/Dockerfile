@@ -25,7 +25,8 @@ COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/scripts ./scripts
 COPY --from=base /app/src ./src
 COPY --from=base /app/tsconfig* ./
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.6.0 /lambda-adapter /opt/extensions/lambda-adapter
 
-EXPOSE 3000
+EXPOSE 8080
 
 CMD [ "node", "./dist/main"]
