@@ -3,7 +3,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-    <img src="images/logo.png">
+    <img width="300" height="300" src="images/logo.png">
 
 <h3 align="center">Amplification + AWS Lambda Adapter</h3>
 
