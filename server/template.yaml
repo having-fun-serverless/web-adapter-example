@@ -51,13 +51,6 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
       AvailabilityZone: us-east-1a
-  PublicSubnet2:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: 10.0.3.0/24
-      AvailabilityZone: us-east-1b
-      MapPublicIpOnLaunch: true
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -87,11 +80,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  PublicSubne2tRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PublicSubnet2
-      RouteTableId: !Ref PublicRouteTable
   
   PublicSubne1tRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -114,14 +102,15 @@ Resources:
           git clone https://github.com/aws-hebrew-book/web-adapter-example.git
           cd web-adapter-example/server
           curl --silent --location https://rpm.nodesource.com/setup_16.x | sudo bash -
-          npm i
+          sudo yum install -y nodejs
+          sudo npm i
           export DB_URL='postgresql://{{resolve:secretsmanager:AuroraDBCredentials:SecretString:username}}:{{resolve:secretsmanager:AuroraDBCredentials:SecretString:password}}@${RDSInstance.Endpoint.Address}'
-          npm run db:init
+          sudo -E npm run db:init
       SecurityGroupIds:
         - !Ref BastionSecurityGroup
       SubnetId: !Ref PublicSubnet1
       KeyName: !Ref keyPair
-      DependsOn: RDSInstance
+    DependsOn: RDSInstance
       
   # RDS related resources
   RDSSecurityGroup:
