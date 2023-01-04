@@ -1,36 +1,219 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  sam-app
+  Amplication application resources
+  
+Parameters:
+  dbUserPassword:
+    NoEcho: true
+    Type: String
+    Default: Aqsw!246
+  dbUserName:
+    NoEcho: true
+    Type: String
+    Default: AmplicationAdmin
+  bastionAMI:
+    Type: String
+    Default: ami-0b5eea76982371e91
+  keyPair:
+    Type: String
+    Default: MyPrivateKey
 
-  Sample SAM Template for sam-app
-
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 150
-
-Resources:
-    Amplication:
-        Type: AWS::Serverless::Function
-        Properties:
-            PackageType: Image
-            MemorySize: 1024
-            Environment:
-                Variables:
-                    BCRYPT_SALT: 10
-                    JWT_SECRET_KEY: Change_ME
-                    JWT_EXPIRATION: 2d
-                    PORT: 8080
-            FunctionUrlConfig:
-                AuthType: NONE
-        Metadata:
-            DockerTag: v1
-            DockerContext: ./
-            Dockerfile: Dockerfile
     
+Resources:
+# VPC related resources
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: true
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: us-east-1a
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: us-east-1b
+      MapPublicIpOnLaunch: true
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.4.0/24
+      AvailabilityZone: us-east-1b
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Security group for Bastion
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+  
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubne2tRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+  
+  PublicSubne1tRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+  
+  BastionHost:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref bastionAMI
+      InstanceType: t2.micro
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash
+          sudo yum update -y
+          sudo yum install -y postgresql
+          sudo yum install -y ec2-instance-connect
+          sudo yum install -y git
+          git clone https://github.com/aws-hebrew-book/web-adapter-example.git
+          cd web-adapter-example/server
+          curl --silent --location https://rpm.nodesource.com/setup_16.x | sudo bash -
+          npm i
+          export DB_URL='postgresql://{{resolve:secretsmanager:AuroraDBCredentials:SecretString:username}}:{{resolve:secretsmanager:AuroraDBCredentials:SecretString:password}}@${RDSInstance.Endpoint.Address}'
+          npm run db:init
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+      SubnetId: !Ref PublicSubnet1
+      KeyName: !Ref keyPair
+      DependsOn: RDSInstance
+      
+  # RDS related resources
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Security group for RDS
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: AmplicationDB
+      Engine: postgres
+      MasterUsername: !Ref dbUserName
+      MasterUserPassword: !Ref dbUserPassword
+      AllocatedStorage: 5
+      DBInstanceClass: db.t4g.micro
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets available for the RDS instance
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  # Save User name and password in SSM
+  DBCredentials:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: AuroraDBCredentials
+      Description: "Aurora DB password"
+      SecretString: !Join
+        - ''
+        - - '{"username":"'
+          - !Ref dbUserName
+          - '","password":"'
+          - !Ref dbUserPassword
+          - '"}'
+          
+  # The actual Lambda
+  AmplicationLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for my function
+      VpcId: !Ref VPC
+      SecurityGroupIngress: []
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+          FromPort: 80
+          ToPort: 5432
+
+  Amplication:
+    Type: AWS::Serverless::Function
+    Properties:
+        PackageType: Image
+        MemorySize: 1024
+        VpcConfig:
+          SecurityGroupIds:
+            - !Ref AmplicationLambdaSecurityGroup
+          SubnetIds:
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
+        Environment:
+            Variables:
+                BCRYPT_SALT: 10
+                JWT_SECRET_KEY: Change_ME
+                JWT_EXPIRATION: 2d
+                PORT: 8080
+                DB_PORT: 5432
+                DB_URL: !Sub 'postgresql://{{resolve:secretsmanager:AuroraDBCredentials:SecretString:username}}:{{resolve:secretsmanager:AuroraDBCredentials:SecretString:password}}@${RDSInstance.Endpoint.Address}'
+        FunctionUrlConfig:
+            AuthType: NONE
+    Metadata:
+        DockerTag: v1
+        DockerContext: ./
+        Dockerfile: Dockerfile
+        
 Outputs:
     AmplicationFunctionUrlEndpoint:
       Description: "Amplication Function URL Endpoint"
-      Value:
-        Fn::GetAtt: AmplicationUrl.FunctionUrl
+      Value: !GetAtt AmplicationUrl.FunctionUrl
+    BastionPublicDns:
+      Description: The public DNS of the bastion host
+      Value: !GetAtt BastionHost.PublicDnsName
+    BastionPublicIp:
+      Description: The public IP of the bastion host
+      Value: !GetAtt BastionHost.PublicIp
