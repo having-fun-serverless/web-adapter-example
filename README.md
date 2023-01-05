@@ -70,6 +70,8 @@
 * Access the Lambda URL end point and append `/api`, for example `https://****.lambda-url.us-east-1.on.aws/api`. 
 * Authorize using `admin` as user and password, and make a call.
 
+![service-running](https://user-images.githubusercontent.com/110536677/210722938-1666f737-bff2-4ffc-beff-0dcacba21467.png)
+
 ## Landmarks
 * Defining the extension to be part of your docker file - https://github.com/aws-hebrew-book/web-adapter-example/blob/f787c8c8689259132db70b48b817da16217a5b7b/server/Dockerfile#L28
 * NestJS application runs on port 8080 - https://github.com/aws-hebrew-book/web-adapter-example/blob/f787c8c8689259132db70b48b817da16217a5b7b/server/template.yaml#L206
