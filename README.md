@@ -8,12 +8,14 @@
 <h3 align="center">Amplification + AWS Lambda Adapter</h3>
 
   <p align="center">
-    [AWS Lambda Adapter](https://github.com/awslabs/aws-lambda-web-adapter) is the best kept secret that you can use in order to migrate non-lambda native aplications to the Lambda world. The following repo shows an example of using a Nest based application created with [Amplication](https://amplication.com/)
+    <a href="https://github.com/awslabs/aws-lambda-web-adapter">AWS Lambda Adapter</a> is the best kept secret that you can use in order to migrate non-lambda native application to the Lambda world. 
+    The following repo shows an example of using a Nest based application created with <a href="https://amplication.com">Amplication</a> which is connected to a RDS database and exposed
+    to the outside world using Lambda URL and a Lambda Web Adapter.
     <br />
     <br />
-    <a href="https://github.com/aws-hebrew-book/reminders/issues">Report Bug</a>
+    <a href="https://github.com/aws-hebrew-book/web-adapter-example/issues">Report Bug</a>
     ·
-    <a href="https://github.com/aws-hebrew-book/reminders/issues">Request Feature</a>
+    <a href="https://github.com/aws-hebrew-book/web-adapter-example/issues">Request Feature</a>
   </p>
 </div>
 
@@ -48,7 +50,7 @@
 </div>
 
 1. A NestJS application created with the Amplication development tool. 
-2. The application runs inside a Lambda.
+2. The application runs inside a Lambda using a docker image created by Amplication.
 3. The Lambda is connected to the outside world using Lambda URL functionality.
 4. And it's located inside a private subnet with an access to an RDS database.
 
@@ -64,10 +66,20 @@
 * Make sure you a key pair for the bastion station.
 * The Lambda URL has no authentication on purpose, the authentication is being handled by NestJS.
 
-
 ### Testing
 * Access the Lambda URL end point and append `/api`, for example `https://****.lambda-url.us-east-1.on.aws/api`. 
 * Authorize using `admin` as user and password, and make a call.
+
+## Landmarks
+* Defining the extension to be part of your docker file -
+* NestJS application runs on port 8080 - 
+* Authentication handled by NestJS - 
+* Initial DB migration - 
+* **Anti Pattern** Embedding the credentials as part of UserData, this solution is quick and dirty use SecretsManager - 
+
+
+### Monitoring
+Monitoring is done by using [Lumigo](https://platform.lumigo.io/auth/signup)
 
 ## Contributing
 

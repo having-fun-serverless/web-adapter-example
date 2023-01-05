@@ -22,6 +22,8 @@ Parameters:
 Globals:
   Function:
     Timeout: 150
+    Tags:
+      'lumigo:auto-trace': 'true'
     
 Resources:
 # VPC related resources
@@ -31,6 +33,9 @@ Resources:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: Amplication VPC
   InternetGateway:
     Type: AWS::EC2::InternetGateway
   VPCGatewayAttachment:
@@ -45,18 +50,27 @@ Resources:
       CidrBlock: 10.0.1.0/24
       AvailabilityZone: us-east-1a
       MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: Amplication PublicSubnet1
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
       AvailabilityZone: us-east-1a
+      Tags:
+        - Key: Name
+          Value: Amplication PrivateSubnet1
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.4.0/24
       AvailabilityZone: us-east-1b
+      Tags:
+        - Key: Name
+          Value: Amplication PrivateSubnet1
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -90,6 +104,9 @@ Resources:
   BastionHost:
     Type: AWS::EC2::Instance
     Properties:
+      Tags:
+        - Key: Name
+          Value: Amplication Bastion
       ImageId: !Ref bastionAMI
       InstanceType: t2.micro
       UserData:
@@ -104,7 +121,7 @@ Resources:
           curl --silent --location https://rpm.nodesource.com/setup_16.x | sudo bash -
           sudo yum install -y nodejs
           sudo npm i
-          export DB_URL='postgresql://{{resolve:secretsmanager:AuroraDBCredentials:SecretString:username}}:{{resolve:secretsmanager:AuroraDBCredentials:SecretString:password}}@${RDSInstance.Endpoint.Address}'
+          export DB_URL='postgresql://${dbUserName}:${dbUserPassword}@${RDSInstance.Endpoint.Address}'
           sudo -E npm run db:init
       SecurityGroupIds:
         - !Ref BastionSecurityGroup
