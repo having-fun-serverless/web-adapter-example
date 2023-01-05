@@ -71,11 +71,12 @@
 * Authorize using `admin` as user and password, and make a call.
 
 ## Landmarks
-* Defining the extension to be part of your docker file -
-* NestJS application runs on port 8080 - 
-* Authentication handled by NestJS - 
-* Initial DB migration - 
-* **Anti Pattern** Embedding the credentials as part of UserData, this solution is quick and dirty use SecretsManager - 
+* Defining the extension to be part of your docker file - https://github.com/aws-hebrew-book/web-adapter-example/blob/f787c8c8689259132db70b48b817da16217a5b7b/server/Dockerfile#L28
+* NestJS application runs on port 8080 - https://github.com/aws-hebrew-book/web-adapter-example/blob/f787c8c8689259132db70b48b817da16217a5b7b/server/template.yaml#L206
+* Authentication handled by NestJS - https://github.com/aws-hebrew-book/web-adapter-example/blob/f787c8c8689259132db70b48b817da16217a5b7b/server/template.yaml#L210
+* Initial DB migration - https://github.com/aws-hebrew-book/web-adapter-example/blob/f787c8c8689259132db70b48b817da16217a5b7b/server/template.yaml#L125
+* Using secret manager to save credentials - https://github.com/aws-hebrew-book/web-adapter-example/blob/f787c8c8689259132db70b48b817da16217a5b7b/server/template.yaml#L164
+* **Anti Pattern** Embedding the credentials as part of UserData, this solution is quick and dirty use SecretsManager - https://github.com/aws-hebrew-book/web-adapter-example/blob/f787c8c8689259132db70b48b817da16217a5b7b/server/template.yaml#L124
 
 
 ### Monitoring
